@@ -17,7 +17,7 @@ loss_fn = MeanSquaredError()
 
 target_net = clone_model(q_net)
 
-tf.config.set_visible_devices([], 'GPU')
+# tf.config.set_visible_devices([], 'GPU')
 
 #Prameters
 EPSILON = 1.0
@@ -63,6 +63,14 @@ def policy(state, explore = 0.0):
 
     return action
 
+def calculate_reward(state):
+    reward = -1.0
+    #pole angle <4 degrees, angular acceleration <15%
+    if -0.07 <= state[2] <= 0.07 and -0.525 <= state[3] <= 0.525:
+        reward = 1.0
+
+    return reward
+
 step_counter = 0
 
 for episode in range(NUM_EPISODES):
@@ -72,7 +80,8 @@ for episode in range(NUM_EPISODES):
     state , _ = env.reset()
     while not done:
         action = policy(state, EPSILON)
-        next_state, reward, terminated, truncated, _ =  env.step(action.numpy())
+        next_state, _, terminated, truncated, _ =  env.step(action.numpy())
+        reward = calculate_reward(next_state)
         done = terminated or truncated
         insert_transition([state, action, reward, next_state, done])
         state = next_state
@@ -101,4 +110,4 @@ for episode in range(NUM_EPISODES):
     EPSILON /= EPSILON_DECAY
 
 env.close()
-q_net.save("dqn_qnet2.keras")
+q_net.save("dqn_qnet3.keras")
